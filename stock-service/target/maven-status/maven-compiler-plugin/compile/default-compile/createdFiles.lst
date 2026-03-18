@@ -1,0 +1,6 @@
+com\example\stockservice\service\impl\StockServiceImpl.class
+com\example\stockservice\entity\Stock.class
+com\example\stockservice\mapper\StockMapper.class
+com\example\stockservice\service\StockService.class
+com\example\stockservice\controller\StockController.class
+com\example\stockservice\StockServiceApplication.class

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.orderservice.mapper.OrderMapper">
+    <select id="findAll" resultType="com.example.orderservice.entity.Order">
+        SELECT * FROM `order`
+    </select>
+    <select id="findById" resultType="com.example.orderservice.entity.Order">
+        SELECT * FROM `order` WHERE id = #{id}
+    </select>
+    <select id="findByUserId" resultType="com.example.orderservice.entity.Order">
+        SELECT * FROM `order` WHERE user_id = #{userId}
+    </select>
+    <insert id="insertOrder" parameterType="com.example.orderservice.entity.Order" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `order` (user_id, product_id, stock_id, amount, status, created_at)
+        VALUES (#{userId}, #{productId}, #{stockId}, #{amount}, #{status}, #{createdAt})
+    </insert>
+    <update id="updateOrder" parameterType="com.example.orderservice.entity.Order">
+        UPDATE `order` SET user_id = #{userId}, product_id = #{productId}, stock_id = #{stockId}, amount = #{amount}, status = #{status}
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">
+        DELETE FROM `order` WHERE id = #{id}
+    </delete>
+</mapper>

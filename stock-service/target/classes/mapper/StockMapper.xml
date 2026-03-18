@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.stockservice.mapper.StockMapper">
+    <select id="findAll" resultType="com.example.stockservice.entity.Stock">
+        SELECT * FROM stock
+    </select>
+    <select id="findById" resultType="com.example.stockservice.entity.Stock">
+        SELECT * FROM stock WHERE id = #{id}
+    </select>
+    <select id="findByProductId" resultType="com.example.stockservice.entity.Stock">
+        SELECT * FROM stock WHERE product_id = #{productId}
+    </select>
+    <insert id="insertStock" parameterType="com.example.stockservice.entity.Stock" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO stock (product_id, quantity, updated_at)
+        VALUES (#{productId}, #{quantity}, #{updatedAt})
+    </insert>
+    <update id="updateStock" parameterType="com.example.stockservice.entity.Stock">
+        UPDATE stock SET product_id = #{productId}, quantity = #{quantity}, updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">
+        DELETE FROM stock WHERE id = #{id}
+    </delete>
+</mapper>

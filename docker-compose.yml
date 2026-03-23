@@ -1,16 +1,63 @@
 services:
-  mysql:
+  mysql-master:
     image: mysql:5.7
+    command:
+      - --server-id=1
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
+      - --gtid-mode=ON
+      - --enforce-gtid-consistency=ON
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: seckill_db
     ports:
       - "3308:3306"
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./docker/mysql/master/init/01-replication-user.sql:/docker-entrypoint-initdb.d/02-replication-user.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
       interval: 5s
       timeout: 5s
       retries: 20
+    networks:
+      - backend
+
+  mysql-slave:
+    image: mysql:5.7
+    command:
+      - --server-id=2
+      - --relay-log=mysql-relay-bin
+      - --read-only=ON
+      - --gtid-mode=ON
+      - --enforce-gtid-consistency=ON
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3309:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - backend
+
+  mysql-replication-init:
+    image: mysql:5.7
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+      mysql-slave:
+        condition: service_healthy
+    command: >
+      bash -c "
+      mysql -hmysql-master -uroot -proot -e \"SELECT 1\" &&
+      mysql -hmysql-slave -uroot -proot -e \"SELECT 1\" &&
+      mysql -hmysql-slave -uroot -proot -e \"STOP SLAVE; RESET SLAVE ALL; CHANGE MASTER TO MASTER_HOST='mysql-master', MASTER_USER='repl', MASTER_PASSWORD='repl123', MASTER_AUTO_POSITION=1; START SLAVE;\" &&
+      mysql -hmysql-slave -uroot -proot -e \"SHOW SLAVE STATUS\\G\"
+      "
+    restart: "no"
     networks:
       - backend
 
@@ -32,14 +79,16 @@ services:
       dockerfile: user-service/Dockerfile
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/seckill_db?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-master:3306/seckill_db?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
     depends_on:
-      mysql:
+      mysql-master:
         condition: service_healthy
+      mysql-replication-init:
+        condition: service_started
       redis:
         condition: service_healthy
     networks:
@@ -51,16 +100,26 @@ services:
       dockerfile: product-service/Dockerfile
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/seckill_db?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_RW_WRITE_URL: jdbc:mysql://mysql-master:3306/seckill_db?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+      SPRING_RW_WRITE_USERNAME: root
+      SPRING_RW_WRITE_PASSWORD: root
+      SPRING_RW_READ_URL: jdbc:mysql://mysql-slave:3306/seckill_db?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+      SPRING_RW_READ_USERNAME: root
+      SPRING_RW_READ_PASSWORD: root
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
+      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
     depends_on:
-      mysql:
+      mysql-master:
         condition: service_healthy
+      mysql-slave:
+        condition: service_healthy
+      mysql-replication-init:
+        condition: service_started
       redis:
         condition: service_healthy
+      elasticsearch:
+        condition: service_started
     networks:
       - backend
 
@@ -70,14 +129,16 @@ services:
       dockerfile: stock-service/Dockerfile
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/seckill_db?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-master:3306/seckill_db?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
     depends_on:
-      mysql:
+      mysql-master:
         condition: service_healthy
+      mysql-replication-init:
+        condition: service_started
       redis:
         condition: service_healthy
     networks:
@@ -89,19 +150,32 @@ services:
       dockerfile: order-service/Dockerfile
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/seckill_db?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-master:3306/seckill_db?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       STOCK_SERVICE_BASE_URL: http://stock-service:8080
     depends_on:
-      mysql:
+      mysql-master:
         condition: service_healthy
+      mysql-replication-init:
+        condition: service_started
       redis:
         condition: service_healthy
       stock-service:
         condition: service_started
+    networks:
+      - backend
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.23
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
     networks:
       - backend
 

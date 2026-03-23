@@ -36,5 +36,12 @@ Distributed/
 2. 各服务分别运行 Spring Boot 主类
 3. 可用 Postman/curl 测试接口
 
----
-如需详细开发步骤或代码模板，请参考《系统设计与环境准备文档.md》。
+## Docker 一键启动
+
+1. 在项目根目录执行：
+   - `docker compose up -d --build --scale product-service=2`
+2. 访问：
+   - `http://localhost/`（Nginx 静态资源）
+   - `http://localhost/api/products/1`（Nginx 转发到 product-service）
+   - `http://localhost/api/products/search?keyword=xxx`（Elasticsearch 搜索）
+

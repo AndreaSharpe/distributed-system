@@ -40,6 +40,16 @@ public class ProductController {
         return resp;
     }
 
+    @GetMapping("/search")
+    public Map<String, Object> searchProducts(@RequestParam("keyword") String keyword) {
+        List<Product> products = productService.searchProducts(keyword);
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("code", 0);
+        resp.put("message", "success");
+        resp.put("data", products);
+        return resp;
+    }
+
     @PostMapping
     public Map<String, Object> createProduct(@RequestBody Product product) {
         Product created = productService.createProduct(product);

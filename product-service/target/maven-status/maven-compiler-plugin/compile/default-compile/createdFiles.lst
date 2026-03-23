@@ -1,6 +1,8 @@
 com\example\productservice\service\impl\ProductServiceImpl.class
 com\example\productservice\controller\ProductController.class
 com\example\productservice\ProductServiceApplication.class
+com\example\productservice\document\ProductDocument.class
+com\example\productservice\repository\ProductSearchRepository.class
 com\example\productservice\service\ProductService.class
 com\example\productservice\entity\Product.class
 com\example\productservice\mapper\ProductMapper.class

@@ -1,2 +1,6 @@
 /docs
 README.md
+product-service/target/
+order-service/target/
+stock-service/target/
+user-service/target/

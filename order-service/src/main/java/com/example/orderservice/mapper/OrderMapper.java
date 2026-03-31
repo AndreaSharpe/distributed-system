@@ -10,8 +10,11 @@ import java.util.List;
 public interface OrderMapper {
     List<Order> findAll();
     Order findById(@Param("id") Long id);
+    Order findByOrderNo(@Param("orderNo") Long orderNo);
     List<Order> findByUserId(@Param("userId") Long userId);
     int insertOrder(Order order);
     int updateOrder(Order order);
     int deleteById(@Param("id") Long id);
+
+    int deleteByOrderNo(@Param("orderNo") Long orderNo);
 }

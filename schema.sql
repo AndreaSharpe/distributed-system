@@ -34,12 +34,14 @@ CREATE TABLE IF NOT EXISTS stock (
 -- 订单表
 CREATE TABLE IF NOT EXISTS `order` (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    order_no BIGINT NOT NULL COMMENT '雪花算法等业务唯一单号',
     user_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
     stock_id BIGINT NOT NULL,
     amount INT NOT NULL,
     status VARCHAR(32) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_order_no (order_no),
     FOREIGN KEY (user_id) REFERENCES user(id),
     FOREIGN KEY (product_id) REFERENCES product(id),
     FOREIGN KEY (stock_id) REFERENCES stock(id)

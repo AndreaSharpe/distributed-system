@@ -1,6 +1,10 @@
 E:\WHU\Distributed\order-service\src\main\java\com\example\orderservice\controller\OrderController.java
+E:\WHU\Distributed\order-service\src\main\java\com\example\orderservice\dto\SeckillOrderKafkaMessage.java
 E:\WHU\Distributed\order-service\src\main\java\com\example\orderservice\entity\Order.java
+E:\WHU\Distributed\order-service\src\main\java\com\example\orderservice\exception\DuplicateSecKillException.java
+E:\WHU\Distributed\order-service\src\main\java\com\example\orderservice\kafka\OrderKafkaConsumer.java
 E:\WHU\Distributed\order-service\src\main\java\com\example\orderservice\mapper\OrderMapper.java
 E:\WHU\Distributed\order-service\src\main\java\com\example\orderservice\OrderServiceApplication.java
 E:\WHU\Distributed\order-service\src\main\java\com\example\orderservice\service\impl\OrderServiceImpl.java
 E:\WHU\Distributed\order-service\src\main\java\com\example\orderservice\service\OrderService.java
+E:\WHU\Distributed\order-service\src\main\java\com\example\orderservice\util\SnowflakeIdGenerator.java

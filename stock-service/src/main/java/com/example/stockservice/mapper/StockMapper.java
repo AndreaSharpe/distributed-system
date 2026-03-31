@@ -14,4 +14,7 @@ public interface StockMapper {
     int insertStock(Stock stock);
     int updateStock(Stock stock);
     int deleteById(@Param("id") Long id);
+
+    /** 数据库原子扣减，返回影响行数（1 表示成功） */
+    int decrementIfEnough(@Param("productId") Long productId, @Param("amount") int amount);
 }

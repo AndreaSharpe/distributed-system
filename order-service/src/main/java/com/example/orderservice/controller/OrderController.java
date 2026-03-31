@@ -1,6 +1,7 @@
 package com.example.orderservice.controller;
 
 import com.example.orderservice.entity.Order;
+import com.example.orderservice.exception.DuplicateSecKillException;
 import com.example.orderservice.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,21 @@ public class OrderController {
         resp.put("code", 0);
         resp.put("message", "success");
         resp.put("data", orders);
+        return resp;
+    }
+
+    @GetMapping("/by-no/{orderNo}")
+    public Map<String, Object> getOrderByOrderNo(@PathVariable Long orderNo) {
+        Order order = orderService.getOrderByOrderNo(orderNo);
+        Map<String, Object> resp = new HashMap<>();
+        if (order == null) {
+            resp.put("code", 404);
+            resp.put("message", "Order not found");
+            return resp;
+        }
+        resp.put("code", 0);
+        resp.put("message", "success");
+        resp.put("data", order);
         return resp;
     }
 
@@ -91,6 +107,17 @@ public class OrderController {
             resp.put("code", 0);
             resp.put("message", "success");
             resp.put("data", order);
+            return resp;
+        } catch (DuplicateSecKillException e) {
+            Order existing = orderService.getOrderByOrderNo(e.getOrderNo());
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("code", 0);
+            resp.put("message", "duplicate");
+            Map<String, Object> data = new HashMap<>();
+            data.put("orderNo", e.getOrderNo());
+            data.put("duplicate", true);
+            data.put("order", existing);
+            resp.put("data", data);
             return resp;
         } catch (Exception e) {
             Map<String, Object> resp = new HashMap<>();

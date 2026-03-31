@@ -1,5 +1,6 @@
 package com.example.stockservice.controller;
 
+import com.example.stockservice.dto.SeckillReserveResult;
 import com.example.stockservice.entity.Stock;
 import com.example.stockservice.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,6 +94,51 @@ public class StockController {
         Map<String, Object> resp = new HashMap<>();
         resp.put("code", success ? 0 : 1);
         resp.put("message", success ? "success" : "failed");
+        return resp;
+    }
+
+    /** 秒杀：Redis 缓存库存原子预扣 */
+    @PostMapping("/seckill/reserve")
+    public Map<String, Object> reserveSeckill(@RequestBody Map<String, Object> req) {
+        Long productId = Long.valueOf(req.get("productId").toString());
+        int amount = Integer.valueOf(req.get("amount").toString());
+        SeckillReserveResult result = stockService.reserveSeckillStock(productId, amount);
+        Map<String, Object> resp = new HashMap<>();
+        if (!result.isSuccess()) {
+            resp.put("code", 1);
+            resp.put("message", "reserve failed");
+            return resp;
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("stockId", result.getStockId());
+        data.put("remaining", result.getRemaining());
+        resp.put("code", 0);
+        resp.put("message", "success");
+        resp.put("data", data);
+        return resp;
+    }
+
+    /** 回滚 Redis 预扣 */
+    @PostMapping("/seckill/release")
+    public Map<String, Object> releaseSeckill(@RequestBody Map<String, Object> req) {
+        Long productId = Long.valueOf(req.get("productId").toString());
+        int amount = Integer.valueOf(req.get("amount").toString());
+        stockService.releaseSeckillStock(productId, amount);
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("code", 0);
+        resp.put("message", "released");
+        return resp;
+    }
+
+    /** Kafka 消费者：仅数据库扣减，与预扣对齐 */
+    @PostMapping("/db-deduct")
+    public Map<String, Object> deductDb(@RequestBody Map<String, Object> req) {
+        Long productId = Long.valueOf(req.get("productId").toString());
+        int amount = Integer.valueOf(req.get("amount").toString());
+        boolean ok = stockService.deductStockDbOnly(productId, amount);
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("code", ok ? 0 : 1);
+        resp.put("message", ok ? "success" : "failed");
         return resp;
     }
 }

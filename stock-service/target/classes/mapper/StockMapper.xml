@@ -21,4 +21,8 @@
     <delete id="deleteById">
         DELETE FROM stock WHERE id = #{id}
     </delete>
+    <update id="decrementIfEnough">
+        UPDATE stock SET quantity = quantity - #{amount}, updated_at = NOW()
+        WHERE product_id = #{productId} AND quantity >= #{amount}
+    </update>
 </mapper>

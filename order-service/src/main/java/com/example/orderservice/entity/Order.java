@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 @Data
 public class Order {
     private Long id;
+    /** 业务订单号（雪花算法等） */
+    private Long orderNo;
     private Long userId;
     private Long productId;
     private Long stockId;

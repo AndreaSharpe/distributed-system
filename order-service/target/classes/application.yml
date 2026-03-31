@@ -11,6 +11,24 @@ spring:
     port: ${SPRING_REDIS_PORT:6379}
     password: ${SPRING_REDIS_PASSWORD:}
     database: ${SPRING_REDIS_DATABASE:0}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    consumer:
+      group-id: order-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      acks: all
+      retries: 3
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+snowflake:
+  worker-id: ${SNOWFLAKE_WORKER_ID:1}
+
+seckill:
+  order-topic: seckill-order
 
 services:
   stock:

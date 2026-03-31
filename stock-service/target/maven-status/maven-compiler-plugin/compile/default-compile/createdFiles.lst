@@ -1,3 +1,4 @@
+com\example\stockservice\dto\SeckillReserveResult.class
 com\example\stockservice\service\impl\StockServiceImpl.class
 com\example\stockservice\entity\Stock.class
 com\example\stockservice\mapper\StockMapper.class

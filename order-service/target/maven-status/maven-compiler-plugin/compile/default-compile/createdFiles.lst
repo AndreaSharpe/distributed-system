@@ -1,6 +1,10 @@
+com\example\orderservice\kafka\OrderKafkaConsumer.class
 com\example\orderservice\OrderServiceApplication.class
 com\example\orderservice\service\impl\OrderServiceImpl.class
 com\example\orderservice\controller\OrderController.class
 com\example\orderservice\mapper\OrderMapper.class
+com\example\orderservice\exception\DuplicateSecKillException.class
+com\example\orderservice\dto\SeckillOrderKafkaMessage.class
 com\example\orderservice\service\OrderService.class
+com\example\orderservice\util\SnowflakeIdGenerator.class
 com\example\orderservice\entity\Order.class

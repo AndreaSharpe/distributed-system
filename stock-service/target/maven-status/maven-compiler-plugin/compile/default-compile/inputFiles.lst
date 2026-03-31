@@ -1,4 +1,5 @@
 E:\WHU\Distributed\stock-service\src\main\java\com\example\stockservice\controller\StockController.java
+E:\WHU\Distributed\stock-service\src\main\java\com\example\stockservice\dto\SeckillReserveResult.java
 E:\WHU\Distributed\stock-service\src\main\java\com\example\stockservice\entity\Stock.java
 E:\WHU\Distributed\stock-service\src\main\java\com\example\stockservice\mapper\StockMapper.java
 E:\WHU\Distributed\stock-service\src\main\java\com\example\stockservice\service\impl\StockServiceImpl.java

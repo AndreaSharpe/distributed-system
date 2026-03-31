@@ -7,18 +7,24 @@
     <select id="findById" resultType="com.example.orderservice.entity.Order">
         SELECT * FROM `order` WHERE id = #{id}
     </select>
+    <select id="findByOrderNo" resultType="com.example.orderservice.entity.Order">
+        SELECT * FROM `order` WHERE order_no = #{orderNo}
+    </select>
     <select id="findByUserId" resultType="com.example.orderservice.entity.Order">
         SELECT * FROM `order` WHERE user_id = #{userId}
     </select>
     <insert id="insertOrder" parameterType="com.example.orderservice.entity.Order" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO `order` (user_id, product_id, stock_id, amount, status, created_at)
-        VALUES (#{userId}, #{productId}, #{stockId}, #{amount}, #{status}, #{createdAt})
+        INSERT INTO `order` (order_no, user_id, product_id, stock_id, amount, status, created_at)
+        VALUES (#{orderNo}, #{userId}, #{productId}, #{stockId}, #{amount}, #{status}, #{createdAt})
     </insert>
     <update id="updateOrder" parameterType="com.example.orderservice.entity.Order">
-        UPDATE `order` SET user_id = #{userId}, product_id = #{productId}, stock_id = #{stockId}, amount = #{amount}, status = #{status}
+        UPDATE `order` SET order_no = #{orderNo}, user_id = #{userId}, product_id = #{productId}, stock_id = #{stockId}, amount = #{amount}, status = #{status}
         WHERE id = #{id}
     </update>
     <delete id="deleteById">
         DELETE FROM `order` WHERE id = #{id}
+    </delete>
+    <delete id="deleteByOrderNo">
+        DELETE FROM `order` WHERE order_no = #{orderNo}
     </delete>
 </mapper>

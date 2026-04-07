@@ -10,6 +10,7 @@
         <module>product-service</module>
         <module>stock-service</module>
         <module>order-service</module>
+        <module>payment-service</module>
     </modules>
     <properties>
         <java.version>1.8</java.version>

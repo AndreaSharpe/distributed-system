@@ -2,7 +2,9 @@ package com.example.orderservice.service.impl;
 
 import com.example.orderservice.dto.SeckillOrderKafkaMessage;
 import com.example.orderservice.entity.Order;
+import com.example.orderservice.entity.OutboxEvent;
 import com.example.orderservice.exception.DuplicateSecKillException;
+import com.example.orderservice.mapper.OutboxEventMapper;
 import com.example.orderservice.mapper.OrderMapper;
 import com.example.orderservice.service.OrderService;
 import com.example.orderservice.util.SnowflakeIdGenerator;
@@ -23,7 +25,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -44,6 +46,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    private OutboxEventMapper outboxEventMapper;
 
     @Value("${services.stock.base-url}")
     private String stockServiceBaseUrl;
@@ -70,6 +75,13 @@ public class OrderServiceImpl implements OrderService {
             return null;
         }
         return orderMapper.findByOrderNo(orderNo);
+    }
+
+    @Override
+    @CacheEvict(value = {"orders", "order"}, allEntries = true)
+    public void updateStatusByOrderNo(Long orderNo, String status) {
+        if (orderNo == null || status == null) return;
+        orderMapper.updateStatusByOrderNo(orderNo, status);
     }
 
     @Override
@@ -113,41 +125,34 @@ public class OrderServiceImpl implements OrderService {
             throw new DuplicateSecKillException(Long.parseLong(prev));
         }
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("productId", productId);
-        body.put("amount", amount);
-
-        Map<?, ?> reserveResp = restTemplate.postForObject(
-                stockServiceBaseUrl + "/api/stocks/seckill/reserve", body, Map.class);
-        if (reserveResp == null || !Integer.valueOf(0).equals(reserveResp.get("code"))) {
-            redisTemplate.delete(idemKey);
-            throw new RuntimeException("Redis 库存预扣失败");
-        }
-        @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) reserveResp.get("data");
-        Long stockId = Long.valueOf(data.get("stockId").toString());
-
         SeckillOrderKafkaMessage msg = new SeckillOrderKafkaMessage();
+        msg.setEventId(UUID.randomUUID().toString().replace("-", ""));
         msg.setOrderNo(orderNo);
         msg.setUserId(userId);
         msg.setProductId(productId);
         msg.setAmount(amount);
-        msg.setStockId(stockId);
 
         try {
             String json = objectMapper.writeValueAsString(msg);
-            kafkaTemplate.send(seckillOrderTopic, String.valueOf(orderNo), json).get(30, TimeUnit.SECONDS);
+            OutboxEvent event = new OutboxEvent();
+            event.setEventId(msg.getEventId());
+            event.setAggregateType("Order");
+            event.setAggregateId(String.valueOf(orderNo));
+            event.setEventType("SeckillOrderRequested");
+            event.setTopic(seckillOrderTopic);
+            event.setPayload(json);
+            event.setStatus("NEW");
+            event.setRetryCount(0);
+            outboxEventMapper.insert(event);
         } catch (Exception e) {
-            restTemplate.postForObject(stockServiceBaseUrl + "/api/stocks/seckill/release", body, Map.class);
             redisTemplate.delete(idemKey);
-            throw new RuntimeException("Kafka 发送失败，已回滚预扣", e);
+            throw new RuntimeException("写入 Outbox 失败", e);
         }
 
         Order accepted = new Order();
         accepted.setOrderNo(orderNo);
         accepted.setUserId(userId);
         accepted.setProductId(productId);
-        accepted.setStockId(stockId);
         accepted.setAmount(amount);
         accepted.setStatus("accepted");
         return accepted;
@@ -164,13 +169,31 @@ public class OrderServiceImpl implements OrderService {
             return;
         }
 
+        Map<String, Object> tryBody = new HashMap<>();
+        tryBody.put("orderNo", msg.getOrderNo());
+        tryBody.put("productId", msg.getProductId());
+        tryBody.put("amount", msg.getAmount());
+        tryBody.put("ttlSeconds", 120);
+
+        Map<?, ?> tryResp = restTemplate.postForObject(
+                stockServiceBaseUrl + "/api/stocks/tcc/try", tryBody, Map.class);
+        boolean reserved = tryResp != null && Integer.valueOf(0).equals(tryResp.get("code"));
+        Long stockId = null;
+        if (reserved) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> data = (Map<String, Object>) tryResp.get("data");
+            if (data != null && data.get("stockId") != null) {
+                stockId = Long.valueOf(data.get("stockId").toString());
+            }
+        }
+
         Order pending = new Order();
         pending.setOrderNo(msg.getOrderNo());
         pending.setUserId(msg.getUserId());
         pending.setProductId(msg.getProductId());
-        pending.setStockId(msg.getStockId());
+        pending.setStockId(stockId);
         pending.setAmount(msg.getAmount());
-        pending.setStatus("pending");
+        pending.setStatus(reserved ? "reserved" : "rejected");
         pending.setCreatedAt(LocalDateTime.now());
 
         try {
@@ -179,20 +202,8 @@ public class OrderServiceImpl implements OrderService {
             return;
         }
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("productId", msg.getProductId());
-        body.put("amount", msg.getAmount());
-
-        Map<?, ?> dbResp = restTemplate.postForObject(
-                stockServiceBaseUrl + "/api/stocks/db-deduct", body, Map.class);
-        boolean ok = dbResp != null && Integer.valueOf(0).equals(dbResp.get("code"));
-        if (!ok) {
-            orderMapper.deleteByOrderNo(msg.getOrderNo());
-            restTemplate.postForObject(stockServiceBaseUrl + "/api/stocks/seckill/release", body, Map.class);
+        if (!reserved) {
             return;
         }
-
-        pending.setStatus("paid");
-        orderMapper.updateOrder(pending);
     }
 }

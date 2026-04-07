@@ -1,0 +1,16 @@
+**/node_modules
+**/.pnpm-store
+**/.npm
+**/.yarn
+**/.cache
+
+**/dist
+frontend/seckill/dist
+
+**/target
+
+.git
+.idea
+.vscode
+*.log
+

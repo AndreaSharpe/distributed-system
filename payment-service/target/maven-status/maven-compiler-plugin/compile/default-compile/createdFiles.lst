@@ -1,0 +1,11 @@
+com\example\paymentservice\dto\DomainEvent.class
+com\example\paymentservice\mapper\OutboxEventMapper.class
+com\example\paymentservice\PaymentServiceApplication.class
+com\example\paymentservice\entity\OutboxEvent.class
+com\example\paymentservice\controller\PaymentController.class
+com\example\paymentservice\job\OutboxPublisherJob.class
+com\example\paymentservice\mapper\PaymentMapper.class
+com\example\paymentservice\service\PaymentService.class
+com\example\paymentservice\service\impl\PaymentServiceImpl.class
+com\example\paymentservice\util\SnowflakeIdGenerator.class
+com\example\paymentservice\entity\Payment.class

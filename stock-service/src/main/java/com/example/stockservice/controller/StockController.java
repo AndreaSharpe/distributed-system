@@ -141,4 +141,49 @@ public class StockController {
         resp.put("message", ok ? "success" : "failed");
         return resp;
     }
+
+    /** TCC Try：按订单号预留库存（幂等） */
+    @PostMapping("/tcc/try")
+    public Map<String, Object> tccTry(@RequestBody Map<String, Object> req) {
+        Long orderNo = Long.valueOf(req.get("orderNo").toString());
+        Long productId = Long.valueOf(req.get("productId").toString());
+        int amount = Integer.valueOf(req.get("amount").toString());
+        int ttlSeconds = req.get("ttlSeconds") == null ? 120 : Integer.valueOf(req.get("ttlSeconds").toString());
+        SeckillReserveResult result = stockService.tryReserveByOrderNo(orderNo, productId, amount, ttlSeconds);
+        Map<String, Object> resp = new HashMap<>();
+        if (!result.isSuccess()) {
+            resp.put("code", 1);
+            resp.put("message", "tcc try failed");
+            return resp;
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("stockId", result.getStockId());
+        data.put("remaining", result.getRemaining());
+        resp.put("code", 0);
+        resp.put("message", "success");
+        resp.put("data", data);
+        return resp;
+    }
+
+    /** TCC Confirm：确认扣减（幂等） */
+    @PostMapping("/tcc/confirm")
+    public Map<String, Object> tccConfirm(@RequestBody Map<String, Object> req) {
+        Long orderNo = Long.valueOf(req.get("orderNo").toString());
+        boolean ok = stockService.confirmByOrderNo(orderNo);
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("code", ok ? 0 : 1);
+        resp.put("message", ok ? "success" : "failed");
+        return resp;
+    }
+
+    /** TCC Cancel：取消预留（幂等） */
+    @PostMapping("/tcc/cancel")
+    public Map<String, Object> tccCancel(@RequestBody Map<String, Object> req) {
+        Long orderNo = Long.valueOf(req.get("orderNo").toString());
+        boolean ok = stockService.cancelByOrderNo(orderNo);
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("code", ok ? 0 : 1);
+        resp.put("message", ok ? "cancelled" : "failed");
+        return resp;
+    }
 }

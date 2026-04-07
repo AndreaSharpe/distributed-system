@@ -22,4 +22,13 @@ public interface StockService {
 
     /** 仅数据库扣减（Kafka 消费者确认下单时调用，与 Redis 预扣对齐） */
     boolean deductStockDbOnly(Long productId, int amount);
+
+    /** TCC Try：按订单号预留库存（幂等） */
+    SeckillReserveResult tryReserveByOrderNo(Long orderNo, Long productId, int amount, int ttlSeconds);
+
+    /** TCC Confirm：确认扣减数据库库存（幂等） */
+    boolean confirmByOrderNo(Long orderNo);
+
+    /** TCC Cancel：取消预留并回滚 Redis（幂等） */
+    boolean cancelByOrderNo(Long orderNo);
 }

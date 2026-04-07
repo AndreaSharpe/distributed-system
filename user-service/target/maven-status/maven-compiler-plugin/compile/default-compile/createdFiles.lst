@@ -1,3 +1,4 @@
+com\example\userservice\config\RedisConfig.class
 com\example\userservice\service\impl\UserServiceImpl.class
 com\example\userservice\entity\User.class
 com\example\userservice\mapper\UserMapper.class

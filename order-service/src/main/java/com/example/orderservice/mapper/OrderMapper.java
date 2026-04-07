@@ -14,6 +14,7 @@ public interface OrderMapper {
     List<Order> findByUserId(@Param("userId") Long userId);
     int insertOrder(Order order);
     int updateOrder(Order order);
+    int updateStatusByOrderNo(@Param("orderNo") Long orderNo, @Param("status") String status);
     int deleteById(@Param("id") Long id);
 
     int deleteByOrderNo(@Param("orderNo") Long orderNo);

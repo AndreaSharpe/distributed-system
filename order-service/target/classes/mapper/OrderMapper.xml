@@ -15,7 +15,7 @@
     </select>
     <insert id="insertOrder" parameterType="com.example.orderservice.entity.Order" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO `order` (order_no, user_id, product_id, stock_id, amount, status, created_at)
-        VALUES (#{orderNo}, #{userId}, #{productId}, #{stockId}, #{amount}, #{status}, #{createdAt})
+        VALUES (#{orderNo}, #{userId}, #{productId}, #{stockId,jdbcType=BIGINT}, #{amount}, #{status}, #{createdAt})
     </insert>
     <update id="updateOrder" parameterType="com.example.orderservice.entity.Order">
         UPDATE `order` SET order_no = #{orderNo}, user_id = #{userId}, product_id = #{productId}, stock_id = #{stockId}, amount = #{amount}, status = #{status}

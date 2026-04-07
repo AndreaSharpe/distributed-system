@@ -2,7 +2,9 @@ package com.example.stockservice.service.impl;
 
 import com.example.stockservice.dto.SeckillReserveResult;
 import com.example.stockservice.entity.Stock;
+import com.example.stockservice.entity.StockReservation;
 import com.example.stockservice.mapper.StockMapper;
+import com.example.stockservice.mapper.StockReservationMapper;
 import com.example.stockservice.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -38,6 +40,9 @@ public class StockServiceImpl implements StockService {
 
     @Autowired
     private StockMapper stockMapper;
+
+    @Autowired
+    private StockReservationMapper stockReservationMapper;
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -160,6 +165,74 @@ public class StockServiceImpl implements StockService {
         if (rows <= 0) return false;
         redisTemplate.delete("stock::" + productId);
         redisTemplate.delete("stocks");
+        return true;
+    }
+
+    @Override
+    public SeckillReserveResult tryReserveByOrderNo(Long orderNo, Long productId, int amount, int ttlSeconds) {
+        SeckillReserveResult r = new SeckillReserveResult();
+        if (orderNo == null || productId == null || amount <= 0) return r;
+        if (ttlSeconds <= 0) ttlSeconds = 60;
+
+        StockReservation existing = stockReservationMapper.findByOrderNo(orderNo);
+        if (existing != null) {
+            if ("CONFIRMED".equals(existing.getStatus()) || "TRY".equals(existing.getStatus())) {
+                r.setSuccess(true);
+                Stock stockRow = stockMapper.findByProductId(productId);
+                r.setStockId(stockRow == null ? null : stockRow.getId());
+                return r;
+            }
+            return r;
+        }
+
+        SeckillReserveResult reserve = reserveSeckillStock(productId, amount);
+        if (!reserve.isSuccess()) return r;
+
+        StockReservation resv = new StockReservation();
+        resv.setOrderNo(orderNo);
+        resv.setProductId(productId);
+        resv.setAmount(amount);
+        resv.setStatus("TRY");
+        resv.setExpireAt(LocalDateTime.now().plusSeconds(ttlSeconds));
+        try {
+            stockReservationMapper.insert(resv);
+        } catch (Exception e) {
+            releaseSeckillStock(productId, amount);
+            return r;
+        }
+        return reserve;
+    }
+
+    @Override
+    public boolean confirmByOrderNo(Long orderNo) {
+        if (orderNo == null) return false;
+        StockReservation resv = stockReservationMapper.findByOrderNo(orderNo);
+        if (resv == null) return false;
+        if ("CONFIRMED".equals(resv.getStatus())) return true;
+        if (!"TRY".equals(resv.getStatus())) return false;
+
+        boolean ok = deductStockDbOnly(resv.getProductId(), resv.getAmount());
+        if (!ok) {
+            stockReservationMapper.updateStatusAny(orderNo, "CANCELLED");
+            releaseSeckillStock(resv.getProductId(), resv.getAmount());
+            return false;
+        }
+        stockReservationMapper.updateStatus(orderNo, "TRY", "CONFIRMED");
+        return true;
+    }
+
+    @Override
+    public boolean cancelByOrderNo(Long orderNo) {
+        if (orderNo == null) return false;
+        StockReservation resv = stockReservationMapper.findByOrderNo(orderNo);
+        if (resv == null) return true;
+        if ("CANCELLED".equals(resv.getStatus()) || "EXPIRED".equals(resv.getStatus())) return true;
+        if ("CONFIRMED".equals(resv.getStatus())) return false;
+
+        int rows = stockReservationMapper.updateStatus(orderNo, "TRY", "CANCELLED");
+        if (rows > 0) {
+            releaseSeckillStock(resv.getProductId(), resv.getAmount());
+        }
         return true;
     }
 

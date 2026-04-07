@@ -1,0 +1,11 @@
+E:\WHU\Distributed\payment-service\src\main\java\com\example\paymentservice\controller\PaymentController.java
+E:\WHU\Distributed\payment-service\src\main\java\com\example\paymentservice\dto\DomainEvent.java
+E:\WHU\Distributed\payment-service\src\main\java\com\example\paymentservice\entity\OutboxEvent.java
+E:\WHU\Distributed\payment-service\src\main\java\com\example\paymentservice\entity\Payment.java
+E:\WHU\Distributed\payment-service\src\main\java\com\example\paymentservice\job\OutboxPublisherJob.java
+E:\WHU\Distributed\payment-service\src\main\java\com\example\paymentservice\mapper\OutboxEventMapper.java
+E:\WHU\Distributed\payment-service\src\main\java\com\example\paymentservice\mapper\PaymentMapper.java
+E:\WHU\Distributed\payment-service\src\main\java\com\example\paymentservice\PaymentServiceApplication.java
+E:\WHU\Distributed\payment-service\src\main\java\com\example\paymentservice\service\impl\PaymentServiceImpl.java
+E:\WHU\Distributed\payment-service\src\main\java\com\example\paymentservice\service\PaymentService.java
+E:\WHU\Distributed\payment-service\src\main\java\com\example\paymentservice\util\SnowflakeIdGenerator.java

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.stockservice.mapper.StockReservationMapper">
+    <select id="findByOrderNo" resultType="com.example.stockservice.entity.StockReservation">
+        SELECT * FROM stock_reservation WHERE order_no = #{orderNo}
+    </select>
+
+    <insert id="insert" parameterType="com.example.stockservice.entity.StockReservation" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO stock_reservation (order_no, product_id, amount, status, expire_at, created_at, updated_at)
+        VALUES (#{orderNo}, #{productId}, #{amount}, #{status}, #{expireAt}, NOW(), NOW())
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE stock_reservation
+        SET status = #{toStatus}, updated_at = NOW()
+        WHERE order_no = #{orderNo} AND status = #{fromStatus}
+    </update>
+
+    <update id="updateStatusAny">
+        UPDATE stock_reservation
+        SET status = #{toStatus}, updated_at = NOW()
+        WHERE order_no = #{orderNo}
+    </update>
+
+    <select id="findExpiredTry" resultType="com.example.stockservice.entity.StockReservation">
+        SELECT * FROM stock_reservation
+        WHERE status = 'TRY' AND expire_at &lt;= #{now}
+        ORDER BY expire_at ASC
+        LIMIT #{limit}
+    </select>
+</mapper>
+

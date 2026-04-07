@@ -13,7 +13,9 @@ spring:
     database: ${SPRING_REDIS_DATABASE:0}
 mybatis:
   mapper-locations: classpath*:mapper/*.xml
-  type-aliases-package: com.example.entity
+  type-aliases-package: com.example.stockservice.entity
+  configuration:
+    map-underscore-to-camel-case: true
 logging:
   level:
     root: INFO

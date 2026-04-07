@@ -17,4 +17,7 @@ public interface OrderService {
 
     /** Kafka 异步落单 */
     void consumeSeckillOrder(SeckillOrderKafkaMessage message);
+
+    /** 订单状态流转（用于支付回调编排），包含缓存驱逐 */
+    void updateStatusByOrderNo(Long orderNo, String status);
 }

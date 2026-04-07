@@ -1,7 +1,11 @@
+com\example\stockservice\mapper\StockReservationMapper.class
+com\example\stockservice\service\StockService.class
+com\example\stockservice\controller\StockController.class
+com\example\stockservice\StockServiceApplication.class
+com\example\stockservice\config\RedisConfig.class
+com\example\stockservice\job\StockReservationExpireJob.class
 com\example\stockservice\dto\SeckillReserveResult.class
 com\example\stockservice\service\impl\StockServiceImpl.class
 com\example\stockservice\entity\Stock.class
 com\example\stockservice\mapper\StockMapper.class
-com\example\stockservice\service\StockService.class
-com\example\stockservice\controller\StockController.class
-com\example\stockservice\StockServiceApplication.class
+com\example\stockservice\entity\StockReservation.class

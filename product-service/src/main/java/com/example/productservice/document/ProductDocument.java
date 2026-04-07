@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@Document(indexName = "products")
+@Document(indexName = "products", createIndex = false)
 public class ProductDocument {
     @Id
     private Long id;

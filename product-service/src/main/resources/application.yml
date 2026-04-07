@@ -3,23 +3,23 @@ server:
 spring:
   shardingsphere:
     datasource:
-      names: write_ds,read_ds
-      write_ds:
+      names: write-ds,read-ds
+      write-ds:
         type: com.zaxxer.hikari.HikariDataSource
         driver-class-name: com.mysql.cj.jdbc.Driver
         jdbc-url: ${SPRING_RW_WRITE_URL:jdbc:mysql://mysql-master:3306/seckill_db?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC}
         username: ${SPRING_RW_WRITE_USERNAME:root}
         password: ${SPRING_RW_WRITE_PASSWORD:root}
-      read_ds:
+      read-ds:
         type: com.zaxxer.hikari.HikariDataSource
         driver-class-name: com.mysql.cj.jdbc.Driver
         jdbc-url: ${SPRING_RW_READ_URL:jdbc:mysql://mysql-slave:3306/seckill_db?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC}
         username: ${SPRING_RW_READ_USERNAME:root}
         password: ${SPRING_RW_READ_PASSWORD:root}
     masterslave:
-      name: rw_ds
-      master-data-source-name: write_ds
-      slave-data-source-names: read_ds
+      name: rw-ds
+      master-data-source-name: write-ds
+      slave-data-source-names: read-ds
       load-balance-algorithm-type: round_robin
     props:
       sql:

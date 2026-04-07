@@ -30,12 +30,15 @@ snowflake:
 seckill:
   order-topic: seckill-order
 
+events:
+  topic: domain-events
+
 services:
   stock:
     base-url: ${STOCK_SERVICE_BASE_URL:http://stock-service:8080}
 mybatis:
   mapper-locations: classpath*:mapper/*.xml
-  type-aliases-package: com.example.entity
+  type-aliases-package: com.example.orderservice.entity
 logging:
   level:
     root: INFO

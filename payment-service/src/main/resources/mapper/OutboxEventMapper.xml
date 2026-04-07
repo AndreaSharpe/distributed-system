@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.paymentservice.mapper.OutboxEventMapper">
+    <insert id="insert" parameterType="com.example.paymentservice.entity.OutboxEvent" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO outbox_event (event_id, aggregate_type, aggregate_id, event_type, topic, payload, status, retry_count, next_retry_at, created_at, sent_at)
+        VALUES (#{eventId}, #{aggregateType}, #{aggregateId}, #{eventType}, #{topic}, #{payload}, #{status}, #{retryCount}, #{nextRetryAt}, NOW(), #{sentAt})
+    </insert>
+
+    <select id="findDue" resultType="com.example.paymentservice.entity.OutboxEvent">
+        SELECT * FROM outbox_event
+        WHERE (status = 'NEW' OR status = 'RETRY')
+          AND (next_retry_at IS NULL OR next_retry_at &lt;= #{now})
+        ORDER BY created_at ASC
+        LIMIT #{limit}
+    </select>
+
+    <update id="markSent">
+        UPDATE outbox_event
+        SET status = 'SENT', sent_at = NOW()
+        WHERE id = #{id} AND status IN ('NEW','RETRY')
+    </update>
+
+    <update id="markRetry">
+        UPDATE outbox_event
+        SET status = 'RETRY', retry_count = #{retryCount}, next_retry_at = #{nextRetryAt}
+        WHERE id = #{id} AND status IN ('NEW','RETRY')
+    </update>
+
+    <update id="markFailed">
+        UPDATE outbox_event
+        SET status = 'FAILED', retry_count = #{retryCount}
+        WHERE id = #{id}
+    </update>
+</mapper>
+
